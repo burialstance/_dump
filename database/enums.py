@@ -1,12 +1,18 @@
 from enum import Enum
 
 
-class UserGenderEnum(Enum):
+class GendersEnum(str, Enum):
+    UNKNOWN = 'неизвестный'
+    ANY = 'любой'
+
     MALE = 'мужской'
     FEMALE = 'женский'
 
 
-class CountriesEnum(Enum):
+class CountriesEnum(str, Enum):
+    UNKNOWN = 'неизвестная'
+    ANY = 'любая'
+
     RUSSIA = 'Россия'
     UKRAINE = 'Украина'
     BELARUS = 'Беларусь'
@@ -17,4 +23,3 @@ class CountriesEnum(Enum):
     AZERBAIJAN = 'Азербайджан'
     ARMENIA = 'Армения'
     MOLDOVA = 'Молдова'
-    ALL = 'Все'
