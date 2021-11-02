@@ -2,6 +2,7 @@ from tortoise import Tortoise
 from loguru import logger
 
 from . import settings
+from . import signals
 
 
 async def database_init():
@@ -13,5 +14,3 @@ async def database_init():
 async def database_close():
     await Tortoise.close_connections()
     logger.info("Tortoise closed!")
-
-
