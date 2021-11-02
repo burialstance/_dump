@@ -1,11 +1,17 @@
-from aiogram import Dispatcher, executor
+import logging
+import asyncio
+
 from loguru import logger
+from aiogram import Dispatcher, executor
 
 import middlewares, filters, handlers
 from loader import dp
 from database import database_init, database_close
 from utils.set_bot_commands import set_default_commands
 from utils.notify_admins import notify_admins
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 async def on_startup(dispatcher: Dispatcher):
@@ -20,5 +26,10 @@ async def on_shutdown(dispatcher: Dispatcher):
 
 
 if __name__ == '__main__':
-    dp.loop.create_task(database_init())
-    executor.start_polling(dp, on_startup=on_startup, on_shutdown=on_shutdown, skip_updates=True)
+    loop = asyncio.get_event_loop()
+    loop.create_task(database_init())
+    executor.start_polling(
+        loop=loop, dispatcher=dp,
+        on_startup=on_startup, on_shutdown=on_shutdown,
+        skip_updates=True
+    )
