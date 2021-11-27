@@ -5,8 +5,8 @@ from aiogram.types import ParseMode
 
 from loader import dp
 from database.models.search_options import SearchOptions, SearchOptions_Pydantic
-from database.models.user import User, User_Pydantic
-from misc.messages import build_text_from_kwargs
+from database.models.users import User, User_Pydantic
+from pages.text import build_text_from_kwargs
 
 
 @dp.message_handler(Command('user'))
@@ -25,7 +25,7 @@ async def info_user(message: types.Message):
     try:
         search_model = await SearchOptions.get(user_id=message.from_user.id)
         search_data = await SearchOptions_Pydantic.from_tortoise_orm(search_model)
-        text, parse_mode = build_text_from_kwargs(header=f'SearchOptions model info', **search_data.dict())
+        text, parse_mode = build_text_from_kwargs(header=f'SearchOptions model info', **search_data.dict(exclude_unset=True))
         await message.answer(text=text, parse_mode=parse_mode)
     except Exception as e:
         await message.answer(text=f'Exception: {e}')

@@ -1,8 +1,8 @@
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-import config
+from conf.settings import settings
 
 storage = MemoryStorage()
-bot = Bot(token=config.TELEGRAM_BOT_TOKEN)
+bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 dp = Dispatcher(bot, storage=storage)

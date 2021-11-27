@@ -3,7 +3,7 @@ from aiogram.dispatcher.handler import current_handler, CancelHandler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram import types
 
-from database.models.user import User
+from database.models.users import User
 
 
 def userdata_required(func):
@@ -21,14 +21,12 @@ class UserMiddleware(BaseMiddleware):
         handler = current_handler.get()
         if handler and getattr(handler, 'userdata_required', False):
             user = await User.get_or_none(id=user_id)
-            if user:
-                data['user'] = user
-                return
-
-            await self.manager.bot.send_message(chat_id=user_id, text='Для этого действия Требуется регистрация /start')
-            raise CancelHandler
-
-
+            if not user:
+                await self.manager.bot.send_message(
+                    chat_id=user_id, text='Для этого действия требуется регистрация /start')
+                raise CancelHandler
+            data['user'] = user
+            return
 
     async def on_process_message(self, message: types.Message, data: dict):
         await self.push_user_to_context(user_id=message.from_user.id, data=data)

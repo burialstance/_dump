@@ -1,2 +1,3 @@
 from . import start
-from . import info
+from . import profile
+# from . import info

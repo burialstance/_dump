@@ -3,9 +3,7 @@ from misc import icons
 
 icon_for_gender = {
     GendersEnum.MALE: icons.man,
-    GendersEnum.FEMALE: icons.woman,
-    GendersEnum.UNKNOWN: icons.eyes,
-    GendersEnum.ANY: icons.couple
+    GendersEnum.FEMALE: icons.woman
 }
 
 icon_for_country = {
@@ -18,6 +16,5 @@ icon_for_country = {
     CountriesEnum.TURKMENISTAN: icons.turkmenistan_flag,
     CountriesEnum.AZERBAIJAN: icons.azerbaijan_flag,
     CountriesEnum.ARMENIA: icons.armenia_flag,
-    CountriesEnum.MOLDOVA: icons.moldova_flag,
-    CountriesEnum.UNKNOWN: icons.world
+    CountriesEnum.MOLDOVA: icons.moldova_flag
 }

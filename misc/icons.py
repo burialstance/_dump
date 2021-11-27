@@ -1,11 +1,13 @@
-back = '◀️'
+arrow_left = '◀'
+arrow_right = '➡'
 world = '🌎'
 underage = '🔞'
-settings = '⚙️'
+gear = '⚙'
 eyes = '👀'
 book = '📖'
 new = '🆕'
 checked = '✅'
+stop = '❌'
 search = '🔎'
 
 # peoples
@@ -15,6 +17,8 @@ man_office = '👨‍💼'
 woman = '👩'
 man = '👨'
 person = '👤'
+persons = '👥'
+hand_over_mouth = '🤭'
 
 
 # flags

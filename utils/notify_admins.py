@@ -2,19 +2,19 @@ from aiogram.types import ParseMode
 from aiogram.utils.markdown import text, bold, code
 
 from loguru import logger
-from aiogram import Dispatcher
+from aiogram import Bot
 
-from config import TELEGRAM_ADMINS
+from conf.settings import settings
 
 
-async def notify_admins(dispatcher: Dispatcher, message: str, header='NOTIFY SYSTEM'):
-    notify = '\n'.join([
-        text(code(header)),
-        text(bold(message))
-    ])
+async def notify(chat_id: int, text: str, bot: Bot, header: str = 'NOTIFY SYSTEM'):
+    message = '\n'.join([code(header), bold(text)])
+    try:
+        await bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
+    except Exception as err:
+        logger.exception(err)
 
-    for admin_id in TELEGRAM_ADMINS:
-        try:
-            await dispatcher.bot.send_message(admin_id, notify, parse_mode=ParseMode.MARKDOWN)
-        except Exception as err:
-            logger.exception(err)
+
+async def notify_admins(bot: Bot, text: str):
+    for admin_id in settings.TELEGRAM_ADMINS:
+        await notify(chat_id=admin_id, text=text, bot=bot)

@@ -1,3 +1,5 @@
+from conf.settings import settings
+from .utils import fetch_database_models
 DATABASE_CONFIG = {
     'connections': {
         # Dict format for connection
@@ -12,14 +14,11 @@ DATABASE_CONFIG = {
         #     }
         # },
         # 'default': 'postgres://postgres:qwerty123@localhost:5432/test',
-        'default': 'sqlite://database.sqlite'
+        'default': settings.DATABASE_URI
     },
     'apps': {
         'models': {
-            'models': [
-                'database.models.user',
-                'database.models.search_options'
-            ]
+            'models': fetch_database_models()
         }
     },
     # 'routers': ['path.router1', 'path.router2'],

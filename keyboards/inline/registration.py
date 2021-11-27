@@ -1,41 +1,31 @@
 from aiogram import types
 from aiogram.utils.callback_data import CallbackData
 
-from database.enums import CountriesEnum, GendersEnum
+from database.enums import GendersEnum
+from database.services.countries import countries_service
 from misc.enum_to_icon import icon_for_country, icon_for_gender
 
 registration_callback = CallbackData('registration', 'action', 'payload')
 
 
-def build_registration_set_country_kb() -> types.InlineKeyboardMarkup:
+async def build_registration_set_country_kb() -> types.InlineKeyboardMarkup:
+    available_countries = await countries_service.get_all()
+
     kb = types.InlineKeyboardMarkup(row_width=2)
-    countries = [
-        CountriesEnum.RUSSIA,
-        CountriesEnum.UKRAINE,
-        CountriesEnum.BELARUS,
-        CountriesEnum.KAZAKHSTAN,
-        CountriesEnum.UZBEKISTAN,
-        CountriesEnum.TAJIKISTAN,
-        CountriesEnum.TURKMENISTAN,
-        CountriesEnum.AZERBAIJAN,
-        CountriesEnum.ARMENIA,
-        CountriesEnum.MOLDOVA
-    ]
-    for country in countries:
+    for country in available_countries:
         kb.insert(types.InlineKeyboardButton(
-            text=f'{icon_for_country.get(country)} {country}',
-            callback_data=registration_callback.new(action='set_country', payload=country)))
+            text=f'{country.icon} {country.name}',
+            callback_data=registration_callback.new(action='set_country', payload=country.id)))
 
     return kb
 
 
 def build_registration_set_gender_kb() -> types.InlineKeyboardMarkup:
     kb = types.InlineKeyboardMarkup()
-    genders = [GendersEnum.MALE, GendersEnum.FEMALE]
-    for gender in genders:
+    for gender in list(GendersEnum):
         icon = icon_for_gender.get(gender)
         kb.insert(types.InlineKeyboardButton(
-            text=f'{icon} {gender}',
-            callback_data=registration_callback.new(action='set_gender', payload=gender)
+            text=f'{icon} {gender.value}',
+            callback_data=registration_callback.new(action='set_gender', payload=gender.value)
         ))
     return kb

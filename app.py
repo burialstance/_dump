@@ -7,7 +7,7 @@ from aiogram import Dispatcher, executor
 import middlewares, filters, handlers
 from loader import dp
 from database import database_init, database_close
-from utils.set_bot_commands import set_default_commands
+from utils.set_bot_commands import set_bot_commands
 from utils.notify_admins import notify_admins
 
 
@@ -16,8 +16,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def on_startup(dispatcher: Dispatcher):
     logger.info("on_startup...")
-    await set_default_commands(dispatcher=dispatcher)
-    await notify_admins(dispatcher=dispatcher, message='Startup')
+    await database_init()
+    await set_bot_commands(bot=dispatcher.bot)
+    await notify_admins(bot=dispatcher.bot, text='Startup')
 
 
 async def on_shutdown(dispatcher: Dispatcher):
@@ -26,10 +27,7 @@ async def on_shutdown(dispatcher: Dispatcher):
 
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.create_task(database_init())
     executor.start_polling(
-        loop=loop, dispatcher=dp,
-        on_startup=on_startup, on_shutdown=on_shutdown,
-        skip_updates=True
+        dispatcher=dp, skip_updates=True,
+        on_startup=on_startup, on_shutdown=on_shutdown
     )

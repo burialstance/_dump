@@ -1,23 +1,25 @@
 from aiogram import types
+from aiogram.dispatcher.filters import Text, Command
 from aiogram.dispatcher.storage import FSMContext
 
+from database.models.users import User
+from database.services.users import users_service, SignupForm
 from loader import dp
-from database.enums import CountriesEnum, GendersEnum
-from database.services import UserService
 from keyboards.inline.registration import (
     build_registration_set_country_kb,
     build_registration_set_gender_kb,
     registration_callback
 )
 from states.registration import RegistrationState
-from handlers.users.profile import build_user_profile_smart_window
+from handlers.users.profile import build_profile_smart_page
 
 
+@dp.message_handler(Command(['registration']))
 async def start_registration(message: types.Message, state: FSMContext, edit_message: bool = False):
-    current_telegram_user = types.User.get_current()
-    await state.update_data(current_telegram_user.to_python())
+    if await users_service.exists(pk=message.from_user.id):
+        return await message.answer('Пользователь уже зарегистрирован')
 
-    keyboard = build_registration_set_country_kb()
+    keyboard = await build_registration_set_country_kb()
     text = 'Регистрация шаг 1 из 3\nВыберите вашу страну'
     if edit_message:
         return await message.edit_text(text=text, reply_markup=keyboard)
@@ -25,36 +27,29 @@ async def start_registration(message: types.Message, state: FSMContext, edit_mes
 
 
 async def finish_registration(message: types.Message, state: FSMContext, edit_message: bool = False):
-    user_data = await state.get_data()
-    user, created = await UserService.register_new_user(**user_data)
-    if created:
-        window_kwargs = await build_user_profile_smart_window(user)
-        return await message.answer(**window_kwargs)
-    await message.answer(text=user_data)
+    data = await state.get_data()
+    signup_form = SignupForm(
+        user=types.User.get_current().to_python(),
+        profile=dict(user_id=message.from_user.id, **data),
+        referred_id=data.get('referred_id', None)
+    )
+    user = await users_service.registration(form=signup_form)
+    page = await build_profile_smart_page(user)
+    await message.answer(**page.dict(exclude_unset=True))
 
 
-
-# country
 @dp.callback_query_handler(registration_callback.filter())
 async def process_registration_callback(call: types.CallbackQuery, callback_data: dict, state: FSMContext):
     action = callback_data.get('action')
 
     match action:
         case 'set_country':
-            country = callback_data.get('payload')
-            if country not in list(CountriesEnum):
-                return await call.message.answer('Юный киндер, хватит ковырять сервис')
-
-            await state.update_data({'country': CountriesEnum(country)})
+            await state.update_data({'country_id': callback_data.get('payload')})
             keyboard = build_registration_set_gender_kb()
             await call.message.edit_text(text='Регистрация шаг 2 из 3\nУкажите ваш пол', reply_markup=keyboard)
 
         case 'set_gender':
-            gender = callback_data.get('payload')
-            if gender not in list(GendersEnum):
-                return await call.message.answer('Юный киндер, хватит ковырять сервис')
-
-            await state.update_data({'gender': GendersEnum(gender)})
+            await state.update_data({'gender': callback_data.get('payload')})
             await call.message.edit_text(text='Регистрация шаг 3 из 3\nНапиши сколько тебе лет')
             await RegistrationState.set_age.set()
 
@@ -71,4 +66,3 @@ async def process_registration_set_age(message: types.Message, state: FSMContext
     await state.update_data({'age': age})
     await state.reset_state(with_data=False)
     await finish_registration(message=message, state=state)
-

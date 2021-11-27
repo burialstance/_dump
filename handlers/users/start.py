@@ -2,70 +2,73 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.builtin import CommandStart
 
+from database.models.users import User
 from loader import dp
 
-from handlers.users.registration import start_registration
-from middlewares.userdata import userdata_required
 from middlewares.throttling import rate_limit
-from misc.messages import (
-    build_index_page_text, build_rules_text
-)
+from pages.text import build_index_text, build_rules_text
 from keyboards.inline.start import (
-    index_page_callback,
-    build_index_smart_keyboard,
+    build_index_smart_keyboard, index_page_callback,
     build_rules_smart_keyboard
 )
+from schemas.page import Page
+
+from .registration import start_registration
 
 
 async def check_referred_id(message: types.Message, state: FSMContext):
     referred_id = message.get_args()
-    if referred_id.isdigit():
-        await state.update_data({'referred_id': int(referred_id)})
+    if all([referred_id, referred_id.isdigit(), referred_id != message.from_user.id]):
+        await state.update_data({'referred_id': referred_id})
 
 
-@rate_limit(.1)
-async def build_index_window():
-    text, parse_mode = build_index_page_text()
-    reply_markup = await build_index_smart_keyboard()
-    return dict(text=text, parse_mode=parse_mode, reply_markup=reply_markup)
+async def smart_index_page(registration_btn=None) -> Page:
+    if registration_btn is None:
+        registration_btn = not await User.exists(id=types.User.get_current().id)
+
+    text, parse_mode = build_index_text()
+    reply_markup = await build_index_smart_keyboard(registration_btn=registration_btn)
+    return Page(text=text, parse_mode=parse_mode, reply_markup=reply_markup)
 
 
-@rate_limit(.1)
-async def build_rules_window():
+async def smart_rules_page(accept_rules_btn=None):
+    if accept_rules_btn is None:
+        accept_rules_btn = not await User.exists(id=types.User.get_current().id)
+
     text, parse_mode = build_rules_text()
-    reply_markup = await build_rules_smart_keyboard()
-    return dict(text=text, parse_mode=parse_mode, reply_markup=reply_markup)
+    reply_markup = await build_rules_smart_keyboard(accept_rules_btn=accept_rules_btn)
+    return Page(text=text, parse_mode=parse_mode, reply_markup=reply_markup)
 
 
-@rate_limit(.1)
 @dp.message_handler(CommandStart())
-async def process_start_command(message: types.Message, state: FSMContext):
+async def start_command(message: types.Message, state: FSMContext):
     await check_referred_id(message=message, state=state)
 
-    window_kwargs = await build_index_window()
-    await message.answer(**window_kwargs)
+    page = await smart_index_page()
+    await message.answer(**page.dict(exclude_unset=True))
 
-@rate_limit(.1)
+
 @dp.callback_query_handler(index_page_callback.filter())
 async def process_index_page_callback(call: types.CallbackQuery, callback_data: dict, state: FSMContext):
     action = callback_data.get('action')
 
     match action:
-        case 'registration':
-            window_kwargs = await build_rules_window()
-            await call.message.edit_text(**window_kwargs)
-            await call.answer('Необходимо ознакомиться с правилами')
+        case 'back':
+            page = await smart_index_page()
+            await call.message.edit_text(**page.dict(exclude_unset=True))
 
         case 'rules':
-            window_kwargs = await build_rules_window()
-            await call.message.edit_text(**window_kwargs)
+            page = await smart_rules_page(accept_rules_btn=False)
+            await call.message.edit_text(**page.dict(exclude_unset=True))
             await call.answer()
 
-        case 'back':
-            window_kwargs = await build_index_window()
-            await call.message.edit_text(**window_kwargs)
-            await call.answer()
+        case 'registration':
+            page = await smart_rules_page(accept_rules_btn=True)
+            await call.message.edit_text(**page.dict(exclude_unset=True))
+            await call.answer('Необходимо ознакомится с правилами')
 
         case 'accept_rules':
             await call.answer()
-            await start_registration(message=call.message, edit_message=True, state=state)
+            await start_registration(message=call.message, state=state, edit_message=True)
+
+
