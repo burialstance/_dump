@@ -2,9 +2,10 @@ from typing import Tuple, Optional
 
 from aiogram.types import ParseMode
 
-from database.schemas.profiles import Profile
+from database.models.profiles import Profile
+from database.models.search_options import SearchOptions
 from misc import icons, enum_to_icon
-from misc.age import declination
+from misc.age import declination, declination_from
 
 
 def build_text_from_kwargs(header='Header', **body_parts) -> Tuple[str, str]:
@@ -16,7 +17,6 @@ def build_text_from_kwargs(header='Header', **body_parts) -> Tuple[str, str]:
 
     text = '\n'.join(rows)
     parse_mode = ParseMode.HTML
-
     return text, parse_mode
 
 
@@ -47,18 +47,39 @@ def build_rules_text():
     return text, parse_mode
 
 
-def build_profile_text(form: Profile) -> Tuple[str, str]:
-    country = f'{form.country.icon} {form.country.name}' if form.country else 'Неизвестно'
-    gender = f'{enum_to_icon.icon_for_gender[form.gender]} {form.gender.value}' if form.gender else 'Неизвестно'
-    age = f'{form.age} {declination(form.age)}' if form.age else 'Неизвестно'
-    user_id = form.user_id
+def build_profile_text(profile: Profile) -> Tuple[str, str]:
+    country = f'{profile.country.icon} {profile.country.name}' if profile.country else 'Неизвестно'
+    gender = f'{enum_to_icon.icon_for_gender[profile.gender]} {profile.gender}' if profile.gender else 'Неизвестно'
+    age = f'{profile.age} {declination(profile.age)}' if profile.age else 'Неизвестно'
+    user_id = profile.user_id
+
     rows = [
-        f'Профиль пользователя',
+        f'{icons.person} Профиль пользователя',
         f'',
-        f'{icons.person} <code>Пользователь:</code> {user_id}',
+        f'<code>Идентификатор:</code> {user_id}',
         f'{icons.underage} <code>Возраст:</code> {age}',
         f'{icons.world} <code>Страна:</code> {country}',
         f'{icons.couple} <code>Ваш пол:</code> {gender}'
+    ]
+
+    text = '\n'.join(rows)
+    parse_mode = ParseMode.HTML
+    return text, parse_mode
+
+
+def build_search_options_text(s_options: SearchOptions):
+    age_from = f'от {s_options.from_age} {declination_from(s_options.from_age)}' if s_options.from_age else None
+    age_to = f'до {s_options.to_age} {declination_from(s_options.to_age)}' if s_options.to_age else None
+    age = ' '.join(list(filter(None, [age_from, age_to]))) if age_from or age_to else 'Без ограничений'
+    country = f'{s_options.country.icon} {s_options.country.name}' if s_options.country else 'Все'
+    gender = f'{enum_to_icon.icon_for_gender.get(s_options.gender)} {s_options.gender}' if s_options.gender else 'Любой'
+
+    rows = [
+        f'{icons.gear} Поисковые настройки',
+        '',
+        f'{icons.underage} <code>Возраст:</code> {age}',
+        f'{icons.world} <code>Страна:</code> {country}',
+        f'{icons.couple} <code>Пол:</code> {gender}'
     ]
 
     text = '\n'.join(rows)

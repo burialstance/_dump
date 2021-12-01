@@ -1,11 +1,13 @@
 from typing import Optional, List
 
-from loguru import logger
 from tortoise import fields, models
+from tortoise.exceptions import DoesNotExist
+from aiocache import cached
 
 from database.enums import CountriesEnum
 from database import mixins
 from misc.enum_to_icon import icon_for_country
+from database.exceptions.countries import CountryDoesNotExist
 
 
 class Country(mixins.BaseMixin, models.Model):
@@ -20,7 +22,20 @@ class Country(mixins.BaseMixin, models.Model):
                 instance = await Country.create(
                     name=country.value,
                     icon=icon_for_country.get(country, None))
-                logger.debug('created new country', instance)
                 created.append(instance)
-
         return created
+
+    @staticmethod
+    @cached(ttl=600)
+    async def get_country(id: int):
+        try:
+            return await Country.get(id=id)
+        except DoesNotExist:
+            raise CountryDoesNotExist(telegram_notify='Страна не существует')
+
+    @staticmethod
+    @cached(ttl=600)
+    async def get_all_countries() -> List:
+        return await Country.all()
+
+

@@ -14,4 +14,5 @@ class Referral(mixins.BaseMixin, mixins.TimestampMixin, models.Model):
     class Meta:
         table = "referrals"
 
+
 Tortoise.init_models(utils.fetch_database_models(), 'models')

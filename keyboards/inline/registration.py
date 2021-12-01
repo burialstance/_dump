@@ -1,15 +1,15 @@
 from aiogram import types
 from aiogram.utils.callback_data import CallbackData
 
+from database import Country
 from database.enums import GendersEnum
-from database.services.countries import countries_service
 from misc.enum_to_icon import icon_for_country, icon_for_gender
 
 registration_callback = CallbackData('registration', 'action', 'payload')
 
 
 async def build_registration_set_country_kb() -> types.InlineKeyboardMarkup:
-    available_countries = await countries_service.get_all()
+    available_countries = await Country.get_all_countries()
 
     kb = types.InlineKeyboardMarkup(row_width=2)
     for country in available_countries:

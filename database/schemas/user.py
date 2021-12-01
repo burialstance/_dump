@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from database.schemas.profile import ProfileCreate
+
 
 class UserBase(BaseModel):
     username: str
@@ -13,3 +15,13 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     id: int
+
+
+class UserPublic(UserBase):
+    id: int
+
+
+class RegistrationForm(BaseModel):
+    user: UserCreate
+    profile: ProfileCreate
+    referred_id: Optional[int]

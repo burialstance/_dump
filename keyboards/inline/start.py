@@ -1,7 +1,6 @@
 from aiogram import types
 from aiogram.utils.callback_data import CallbackData
 
-from database.models.users import User
 from misc import icons
 
 index_page_callback = CallbackData('index_page', 'action')

@@ -1,5 +1,7 @@
 from conf.settings import settings
-from .utils import fetch_database_models
+from database.utils import fetch_database_models
+
+
 DATABASE_CONFIG = {
     'connections': {
         # Dict format for connection

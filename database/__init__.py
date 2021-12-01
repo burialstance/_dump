@@ -1,9 +1,9 @@
 from tortoise import Tortoise
 from loguru import logger
 
-from . import settings
-from . import signals
-from .models.countries import Country
+from database import logging
+from database.settings import DATABASE_CONFIG
+from database.models.countries import Country
 
 
 async def create_tables():
@@ -11,7 +11,7 @@ async def create_tables():
 
 
 async def database_init():
-    await Tortoise.init(settings.DATABASE_CONFIG)
+    await Tortoise.init(DATABASE_CONFIG)
     await Tortoise.generate_schemas()
     await create_tables()
     logger.info("Tortoise inited!")

@@ -1,10 +1,11 @@
 from aiogram import types
 from aiogram.utils.callback_data import CallbackData
 
+from database.models.countries import Country
 from database.enums import GendersEnum
 from misc import icons
-from misc.enum_to_icon import icon_for_country, icon_for_gender
-from database.services.countries import countries_service
+from misc.enum_to_icon import icon_for_gender
+
 profile_callback = CallbackData('profile', 'section')
 profile_settings_callback = CallbackData('profile_settings', 'section')
 profile_settings_set_callback = CallbackData('profile_settings_set', 'action', 'data')
@@ -15,10 +16,6 @@ def build_profile_kb():
     kb.row(types.InlineKeyboardButton(
         text=f'{icons.person} Настройки профиля',
         callback_data=profile_callback.new(section='settings')
-    )),
-    kb.row(types.InlineKeyboardButton(
-        text=f'{icons.search} Настройки поиска',
-        callback_data=profile_callback.new(section='search_options')
     ))
     kb.row(types.InlineKeyboardButton(
         text=f'Реферальный кабинет',
@@ -55,7 +52,7 @@ def build_profile_settings_kb():
 
 async def build_profile_settings_set_country_kb() -> types.InlineKeyboardMarkup:
     kb = types.InlineKeyboardMarkup(row_width=2)
-    countries = await countries_service.get_all()
+    countries = await Country.get_all_countries()
     for country in countries:
         kb.insert(types.InlineKeyboardButton(
             text=f'{country.icon} {country.name}',

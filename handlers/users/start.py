@@ -16,7 +16,7 @@ from schemas.page import Page
 from .registration import start_registration
 
 
-async def check_referred_id(message: types.Message, state: FSMContext):
+async def _check_referred_id(message: types.Message, state: FSMContext):
     referred_id = message.get_args()
     if all([referred_id, referred_id.isdigit(), referred_id != message.from_user.id]):
         await state.update_data({'referred_id': referred_id})
@@ -42,7 +42,7 @@ async def smart_rules_page(accept_rules_btn=None):
 
 @dp.message_handler(CommandStart())
 async def start_command(message: types.Message, state: FSMContext):
-    await check_referred_id(message=message, state=state)
+    await _check_referred_id(message=message, state=state)
 
     page = await smart_index_page()
     await message.answer(**page.dict(exclude_unset=True))
@@ -52,23 +52,22 @@ async def start_command(message: types.Message, state: FSMContext):
 async def process_index_page_callback(call: types.CallbackQuery, callback_data: dict, state: FSMContext):
     action = callback_data.get('action')
 
-    match action:
-        case 'back':
-            page = await smart_index_page()
-            await call.message.edit_text(**page.dict(exclude_unset=True))
+    if action == 'back':
+        page = await smart_index_page()
+        await call.message.edit_text(**page.dict(exclude_unset=True))
 
-        case 'rules':
-            page = await smart_rules_page(accept_rules_btn=False)
-            await call.message.edit_text(**page.dict(exclude_unset=True))
-            await call.answer()
+    if action == 'rules':
+        page = await smart_rules_page(accept_rules_btn=False)
+        await call.message.edit_text(**page.dict(exclude_unset=True))
+        await call.answer()
 
-        case 'registration':
-            page = await smart_rules_page(accept_rules_btn=True)
-            await call.message.edit_text(**page.dict(exclude_unset=True))
-            await call.answer('Необходимо ознакомится с правилами')
+    if action == 'registration':
+        page = await smart_rules_page(accept_rules_btn=True)
+        await call.message.edit_text(**page.dict(exclude_unset=True))
+        await call.answer('Необходимо ознакомится с правилами')
 
-        case 'accept_rules':
-            await call.answer()
-            await start_registration(message=call.message, state=state, edit_message=True)
+    if action == 'accept_rules':
+        await call.answer()
+        await start_registration(message=call.message, state=state, edit_message=True)
 
 

@@ -1,10 +1,10 @@
 import logging
-import asyncio
 
 from loguru import logger
 from aiogram import Dispatcher, executor
-
-import middlewares, filters, handlers
+import filters
+import middlewares
+import handlers
 from loader import dp
 from database import database_init, database_close
 from utils.set_bot_commands import set_bot_commands
@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.DEBUG)
 async def on_startup(dispatcher: Dispatcher):
     logger.info("on_startup...")
     await database_init()
-    await set_bot_commands(bot=dispatcher.bot)
-    await notify_admins(bot=dispatcher.bot, text='Startup')
+    await set_bot_commands(dp=dispatcher)
+    await notify_admins(dp=dispatcher, text='Startup')
 
 
 async def on_shutdown(dispatcher: Dispatcher):
